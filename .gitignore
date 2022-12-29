@@ -1,0 +1,9 @@
+# Directories
+*__pycache__/
+archive/
+
+# Files
+index.html
+brief.txt
+*.zip
+*.json

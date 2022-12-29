@@ -1,0 +1,5 @@
+beautifulsoup4==4.9.3
+chromedriver-binary==107.0.5304.62.0
+requests==2.25.1
+rich==12.4.4
+selenium==4.2.0
