@@ -16,13 +16,15 @@ def check_folder(path):
 
 class ComicPlaywright:
 
-    url = (
-        "https://comicbookrealm.com/series/113/0/marvel-comics-amazing-spider-man-vol-1"
-    )
     series_id = None
     issues_dir = "issues"
 
-    def __init__(self):
+    def __init__(self, url=None):
+        self.url = (
+            "https://comicbookrealm.com/series/113/0/marvel-comics-amazing-spider-man-vol-1"
+            if not url
+            else url
+        )
         self.issues = []
         self.open_browser()
         self.get_series_id()
@@ -70,8 +72,10 @@ class ComicPlaywright:
         try:
 
             # While not the end of the issues page
-            while not page_length or current_page < page_length:
-                css_selector = f"div#series-details div[class=page_{current_page}] table"
+            while not page_length or current_page <= page_length:
+                css_selector = (
+                    f"div#series-details div[class=page_{current_page}] table"
+                )
                 page.is_visible(css_selector, timeout=10000)
                 html = page.inner_html("div#series-details")
                 soup = BeautifulSoup(html, "html.parser")
