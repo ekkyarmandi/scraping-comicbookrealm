@@ -3,3 +3,4 @@ requests==2.25.1
 rich==12.4.4
 playwright==1.29.0
 urllib3==1.26.13
+scrapy==2.6.1
