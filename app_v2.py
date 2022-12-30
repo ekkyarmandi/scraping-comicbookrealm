@@ -17,7 +17,7 @@ def check_folder(path):
 class ComicPlaywright:
 
     series_id = None
-    issues_dir = "series_issues"
+    issues_dir = "series"
 
     def __init__(self, url=None):
         self.url = (
@@ -44,7 +44,7 @@ class ComicPlaywright:
     def create_file(self, item):
         dst_path = os.path.join("output", self.series_id)
         if not os.path.exists(dst_path):
-            os.mkdirs(dst_path)
+            os.makedirs(dst_path)
         return os.path.join(dst_path, item["id"] + ".json")
 
     def get_series_id(self):
@@ -79,47 +79,48 @@ class ComicPlaywright:
         page.goto(self.url)
 
         # Wait till issues table exists
-        try:
+        # try:
 
-            # While not the end of the issues page
-            while not page_length or current_page <= page_length:
-                css_selector = (
-                    f"div#series-details div[class=page_{current_page}] table"
-                )
-                page.is_visible(css_selector, timeout=10000)
-                html = page.inner_html("div#series-details")
-                soup = BeautifulSoup(html, "html.parser")
+        # While not the end of the issues page
+        while not page_length or current_page <= page_length:
+            css_selector = (
+                f"div#series-details div[class=page_{current_page}] table"
+            )
+            page.is_visible(css_selector, timeout=10000)
+            html = page.inner_html("div#series-details")
+            soup = BeautifulSoup(html, "html.parser")
 
-                # Get the issue page and Find the issue page length
-                if not page_length:
+            # Get the issue page and Find the issue page length
+            if not page_length:
+                try:
                     page_length = int(soup.select("tr.type_footer a[class=g]")[-1].text)
+                except IndexError:
+                    page_length = 1
 
-                # Collect the rows
-                item_list = soup.select(
-                    f"div[class=page_{current_page}] table tr[class*=comic]"
-                )
-                for r in item_list:
-                    a = r.select_one("td span + a")
-                    issue = {
-                        "id": r.get("id", "#"),
-                        "title": re.sub(r"\s+", " ", r.get("title", "#").strip()),
-                        "link": self.urljoin(a.get("href")),
-                        "price": r.select_one("td.value").text.strip(),
-                    }
-                    issues.append(issue)
+            # Collect the rows
+            item_list = soup.select(
+                f"div[class=page_{current_page}] table tr[class*=comic]"
+            )
+            for r in item_list:
+                a = r.select_one("td span + a")
+                issue = {
+                    "id": r.get("id", "#"),
+                    "link": self.urljoin(a.get("href")),
+                }
+                issues.append(issue)
 
-                # Find the issues table pagination tab and click next
-                if current_page < page_length:
-                    pagination = page.query_selector_all("tr.type_footer a.g")
-                    next_page = pagination[current_page]
-                    next_page.click()
-                    time.sleep(2)
+            # Find the issues table pagination tab and click next
+            if current_page < page_length:
+                pagination = page.query_selector_all("tr.type_footer a.g")
+                next_page = pagination[current_page]
+                next_page.click()
+                time.sleep(2)
 
-                # Add current page state by one
-                current_page += 1
+            # Add current page state by one
+            current_page += 1
 
-        except Exception as E:
-            print(E)
+        # except Exception as E:
+        #     print(f"[red]ERROR {E}[/red]")
 
         # close browser and stop playwright
         self.browser.close()
@@ -152,10 +153,12 @@ class ComicPlaywright:
 
             # Get content detail
             item_list = html.select("tr")
-            for  item in item_list:
+            for item in item_list:
                 if i == 0:
                     label = (
-                        list(item.select_one(".label").strings)[-1].replace(":", "").strip()
+                        list(item.select_one(".label").strings)[-1]
+                        .replace(":", "")
+                        .strip()
                     )
                 else:
                     label = item.select_one(".label").text.replace(":", "").strip()
@@ -163,7 +166,9 @@ class ComicPlaywright:
 
             tabs = ["contributors", "characters", "collects", "events", "history"]
             for a in tabs:
-                php_url = f"https://comicbookrealm.com/comic.php?a={a}_tab&comic={comic_id}"
+                php_url = (
+                    f"https://comicbookrealm.com/comic.php?a={a}_tab&comic={comic_id}"
+                )
                 page.goto(php_url)
                 page.is_visible("body", timeout=10000)
                 html = BeautifulSoup(page.inner_html("body"), "html.parser")
@@ -180,8 +185,10 @@ class ComicPlaywright:
                 elif a == "collects":
                     text = page.inner_text("body")
                     if text != "":
-                        html = BeautifulSoup(page.content(),"html.parser")
-                        detail[a.title()] = self.get_collects(html.select("body > ul > li"))
+                        html = BeautifulSoup(page.content(), "html.parser")
+                        detail[a.title()] = self.get_collects(
+                            html.select("body > ul > li")
+                        )
 
                 elif a == "events":
                     detail[a.title()] = self.get_events(html.select("ul > li"))
@@ -238,14 +245,10 @@ class ComicPlaywright:
             return characters
 
     def get_collects(self, item_list):
-        
         def series(item):
             issue_url = item.get("href")
-            return dict(
-                issue=item.text.strip(),
-                issue_url=self.urljoin(issue_url)
-            )
-        
+            return dict(issue=item.text.strip(), issue_url=self.urljoin(issue_url))
+
         # Prepare the variables and collect the characters
         collects = []
         for li in item_list:
@@ -257,7 +260,7 @@ class ComicPlaywright:
                 "vol/year": re.sub("\s+", " ", li.find("span").text.strip()),
                 "publisher": li.select_one("a[href*=publisher]").text.strip(),
                 "publisher_url": self.urljoin(publisher_url),
-                "issues": [series(i) for i in li.select("ul > li a[href*=series]")]
+                "issues": [series(i) for i in li.select("ul > li a[href*=series]")],
             }
             collects.append(collect)
         return collects
@@ -289,9 +292,15 @@ class ComicPlaywright:
 
 if __name__ == "__main__":
 
-    cbr = ComicPlaywright()
-    for i in cbr.issues:
-        jsonfile = cbr.create_file(i)
-        if not os.path.exists(jsonfile):
-            content = cbr.get_detail(i)
-            json.dump(content, open(jsonfile, "w"), indent=4)
+    series = json.load(open("marvel-comic.json"))
+    for s in series:
+        n = s.get("number_of_issues")
+        print(
+            f"[green]Start scraping series: {s.get('url')} ({s.get('years')})[/green]"
+        )
+        cbr = ComicPlaywright(url=s.get("url"))
+        for i in cbr.issues:
+            jsonfile = cbr.create_file(i)
+            if not os.path.exists(jsonfile):
+                content = cbr.get_detail(i)
+                json.dump(content, open(jsonfile, "w"), indent=4)
