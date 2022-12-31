@@ -5,19 +5,23 @@ This data scraping project was developed using Selenium.
 The main task was about scraping the issue data within a [page](https://comicbookrealm.com/series/113/0/marvel-comics-amazing-spider-man-vol-1).
 
 ### How to run
-* Install the dependencies
-```
-pip install -r requirements.txt
-```
-NOTE: I use chromedriver_binary library instead of external driver chromedriver.exe for the webdriver
+1. Install the dependencies
+    ```
+    pip install -r requirements.txt
+    ```
+    Since the script was employeed `Playwright` for rendering the page. It require playwright driver such as chromium or firefox by excuting `playwright install` (this might take sometimes).
 
-* Specify base url
-After loading the `ComicBookRealm` object, you can specify the other main url with parameter `url`. By default it was [this](https://comicbookrealm.com/series/113/0/marvel-comics-amazing-spider-man-vol-1).
-```
-cbr = ComicBookRealm(url="https://comicbookrealm.com/<your-selected-series>")
-```
+2. Gather all the series from the publishers  
+    In this step, publisher.json file is require as an input. The publisher.json will contain series of the comic. Each iteration of series will consumed as the input for gathering all the issues.
 
-* Run the script
-```
-python app.py
-```
+    Sometime publisher.json are named with the publisher name, i.e. marvel-comic.json.
+
+    To gather all the series of the publisher, you need to crawl it using scrapy by executing the command below
+    ```
+    scrapy crawl publisher_series -o <publisher-name>.json
+    ```
+
+3. Run the script
+    ```
+    python app_v2.py
+    ```
