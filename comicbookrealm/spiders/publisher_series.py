@@ -1,12 +1,19 @@
 import scrapy
+import json
 import re
 
 
 class PublisherSeriesSpider(scrapy.Spider):
     name = "publisher_series"
     allowed_domains = ["www.comicbookrealm.com"]
-    start_urls = ["https://comicbookrealm.com/publisher/1/dc-comics/" + chr(i) for i in range(97, 123)]
-    start_urls.insert(0, "https://comicbookrealm.com/publisher/1/dc-comics/num")
+
+    # Read all publishers
+    publishers = json.load(open("all-publisher.json"))
+
+    start_urls = []
+    for p in publishers:
+        series = [*p["series"]]
+        start_urls.extend(series)
 
     def parse(self, response):
 
@@ -19,7 +26,7 @@ class PublisherSeriesSpider(scrapy.Spider):
         item_list = response.css("table#series-search-results tbody > tr[class*=row]")
         for i in item_list:
             url = i.css("td.title a::attr(href)").get()
-            series_id = re.search("series/(\d+)/",url).group(1)
+            series_id = re.search("series/(\d+)/", url).group(1)
             yield {
                 "page": page,
                 "origin": response.url,
@@ -27,5 +34,5 @@ class PublisherSeriesSpider(scrapy.Spider):
                 "url": response.urljoin(url),
                 "vol": i.css("td.volume::text").get().strip(),
                 "years": i.css("td.years::text").get().strip(),
-                "number_of_issues": i.css("td.issues::text").get().strip()
+                "number_of_issues": i.css("td.issues::text").get().strip(),
             }
