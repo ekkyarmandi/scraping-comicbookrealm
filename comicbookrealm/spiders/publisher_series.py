@@ -5,8 +5,8 @@ import re
 class PublisherSeriesSpider(scrapy.Spider):
     name = "publisher_series"
     allowed_domains = ["www.comicbookrealm.com"]
-    start_urls = ["https://comicbookrealm.com/publisher/2/marvel-comics/" + chr(i) for i in range(97, 123)]
-    start_urls.insert(0, "https://comicbookrealm.com/publisher/2/marvel-comics/num")
+    start_urls = ["https://comicbookrealm.com/publisher/1/dc-comics/" + chr(i) for i in range(97, 123)]
+    start_urls.insert(0, "https://comicbookrealm.com/publisher/1/dc-comics/num")
 
     def parse(self, response):
 
